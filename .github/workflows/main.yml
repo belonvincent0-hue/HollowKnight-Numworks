@@ -20,11 +20,10 @@ jobs:
         run: npm install -g nwlink
 
       - name: Compile
-        run: |
-          make
+        run: make
 
       - name: Download .nwa
         uses: actions/upload-artifact@v4
         with:
           name: application-nwa
-          path: *.nwa
+          path: '*.nwa'
