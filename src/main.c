@@ -1,8 +1,15 @@
 #include "libs/eadk.h"
 #include <stdio.h>
+#include <stdbool.h>
 #include "fps.h"
 #include "jpg.h"
 #include "game.h"
+
+// --- ÉTAPE 1 : Variables du menu de triche (SoH Style) ---
+bool cheat_menu_open = false;
+int cheat_selected_option = 0;
+bool god_mode = false;
+int player_speed = 8; // On permet de modifier la vitesse avec le cheat !
 
 const char eadk_app_name[] __attribute__((section(".rodata.eadk_app_name"))) = "HollowKnight";
 const uint32_t eadk_api_level  __attribute__((section(".rodata.eadk_api_level"))) = 0;
@@ -65,10 +72,10 @@ int main(void) {
         eadk_keyboard_state_t state = eadk_keyboard_scan();
         if (eadk_keyboard_key_down(state, eadk_key_home)) break;
 
-        if (eadk_keyboard_key_down(state, eadk_key_left)) dx -= PLAYER_SPEED;
-        if (eadk_keyboard_key_down(state, eadk_key_right)) dx += PLAYER_SPEED;
-        if (eadk_keyboard_key_down(state, eadk_key_up)) dy -= PLAYER_SPEED;
-        if (eadk_keyboard_key_down(state, eadk_key_down)) dy += PLAYER_SPEED;
+        if (eadk_keyboard_key_down(state, eadk_key_left)) dx -= player_speed;
+        if (eadk_keyboard_key_down(state, eadk_key_right)) dx += player_speed;
+        if (eadk_keyboard_key_down(state, eadk_key_up)) dy -= player_speed;
+        if (eadk_keyboard_key_down(state, eadk_key_down)) dy += player_speed;
 
         player.x += dx;
         player.y += dy;
@@ -100,17 +107,10 @@ int main(void) {
         draw_visible_tiles(tile_col, tile_row, pixel_offset_x, pixel_offset_y);
         display_player();
 
-        // {
-        //     char buffer[64];
-        //     snprintf(buffer, sizeof(buffer), "Camera: (%d, %d)", camera.x, camera.y);
-        //     eadk_display_draw_string(buffer, (eadk_point_t){0, 220}, true, eadk_color_white, eadk_color_black);
-        // }
-
         /*------------------------------------------*/
 
         fps_manager_end_frame(fps, &stats);
         fps_manager_cap_frame(fps, &stats);
-        //fps_display_stats(&stats, (eadk_point_t){0, 0});
     }
     fps_manager_destroy(fps);
 
