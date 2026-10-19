@@ -5,7 +5,7 @@
 #include "jpg.h"
 #include "game.h"
 
-// --- ÉTAPE 1 : Variables du menu de triche (Style SoH) ---
+// Variables du menu de triche
 bool cheat_menu_open = false;
 int cheat_selected_option = 0;
 bool god_mode = false;
@@ -53,28 +53,27 @@ void display_player(){
     eadk_display_push_rect_uniform((eadk_rect_t){screen_x, screen_y, 12, 24}, eadk_color_white);
 }
 
-// --- ÉTAPE 2 : Affichage du menu de triche (Style SoH) ---
+// Affichage dynamique du menu avec l'état [ON] / [OFF]
 void draw_cheat_menu() {
     if (!cheat_menu_open) return;
 
-    // Fond du rectangle noir au centre de l'écran
     eadk_display_push_rect_uniform((eadk_rect_t){40, 40, 240, 160}, eadk_color_black);
-
-    // Titre du menu
     eadk_display_draw_string("--- SOH CHEAT MENU ---", (eadk_point_t){50, 50}, true, eadk_color_yellow, eadk_color_black);
 
-    // Option 0 : God Mode
+    char buf_god[32];
+    sprintf(buf_god, "God Mode : %s", god_mode ? "ON" : "OFF");
     if (cheat_selected_option == 0) {
-        eadk_display_draw_string("> God Mode", (eadk_point_t){60, 90}, true, eadk_color_green, eadk_color_black);
+        eadk_display_draw_string(buf_god, (eadk_point_t){60, 90}, true, eadk_color_green, eadk_color_black);
     } else {
-        eadk_display_draw_string("  God Mode", (eadk_point_t){60, 90}, true, eadk_color_white, eadk_color_black);
+        eadk_display_draw_string(buf_god, (eadk_point_t){60, 90}, true, eadk_color_white, eadk_color_black);
     }
 
-    // Option 1 : Vitesse x2
+    char buf_spd[32];
+    sprintf(buf_spd, "Vitesse x2 : %s", (player_speed > 8) ? "ON" : "OFF");
     if (cheat_selected_option == 1) {
-        eadk_display_draw_string("> Vitesse x2", (eadk_point_t){60, 120}, true, eadk_color_green, eadk_color_black);
+        eadk_display_draw_string(buf_spd, (eadk_point_t){60, 120}, true, eadk_color_green, eadk_color_black);
     } else {
-        eadk_display_draw_string("  Vitesse x2", (eadk_point_t){60, 120}, true, eadk_color_white, eadk_color_black);
+        eadk_display_draw_string(buf_spd, (eadk_point_t){60, 120}, true, eadk_color_white, eadk_color_black);
     }
 }
 
@@ -95,22 +94,57 @@ int main(void) {
         eadk_keyboard_state_t state = eadk_keyboard_scan();
         if (eadk_keyboard_key_down(state, eadk_key_home)) break;
 
-        // Déplacement du joueur
-        if (eadk_keyboard_key_down(state, eadk_key_left)) dx -= player_speed;
-        if (eadk_keyboard_key_down(state, eadk_key_right)) dx += player_speed;
-        if (eadk_keyboard_key_down(state, eadk_key_up)) dy -= player_speed;
-        if (eadk_keyboard_key_down(state, eadk_key_down)) dy += player_speed;
+        // Ouvrir/Fermer le menu avec la touche OK (ou EXE)
+        static bool ok_pressed_last = false;
+        bool ok_pressed_now = eadk_keyboard_key_down(state, eadk_key_ok);
+        if (ok_pressed_now && !ok_pressed_last) {
+            cheat_menu_open = !cheat_menu_open;
+        }
+        ok_pressed_last = ok_pressed_now;
+
+        if (cheat_menu_open) {
+            // Navigation Haut / Bas dans le menu
+            static bool up_last = false, down_last = false, right_last = false;
+            
+            bool up_now = eadk_keyboard_key_down(state, eadk_key_up);
+            if (up_now && !up_last) {
+                cheat_selected_option = (cheat_selected_option - 1 + 2) % 2;
+            }
+            up_last = up_now;
+
+            bool down_now = eadk_keyboard_key_down(state, eadk_key_down);
+            if (down_now && !down_last) {
+                cheat_selected_option = (cheat_selected_option + 1) % 2;
+            }
+            down_last = down_now;
+
+            // Activer / Désactiver avec la touche Droite
+            bool right_now = eadk_keyboard_key_down(state, eadk_key_right);
+            if (right_now && !right_last) {
+                if (cheat_selected_option == 0) {
+                    god_mode = !god_mode;
+                } else if (cheat_selected_option == 1) {
+                    player_speed = (player_speed == 8) ? 16 : 8;
+                }
+            }
+            right_last = right_now;
+
+        } else {
+            // Déplacement normal du joueur si le menu est fermé
+            if (eadk_keyboard_key_down(state, eadk_key_left)) dx -= player_speed;
+            if (eadk_keyboard_key_down(state, eadk_key_right)) dx += player_speed;
+            if (eadk_keyboard_key_down(state, eadk_key_up)) dy -= player_speed;
+            if (eadk_keyboard_key_down(state, eadk_key_down)) dy += player_speed;
+        }
 
         player.x += dx;
         player.y += dy;
 
-        // Limites de la carte
         if (player.x < 0) player.x = 0;
         if (player.y < 0) player.y = 0;
         if (player.x > MAP_WIDTH - 320) player.x = MAP_WIDTH - 320;
         if (player.y > MAP_HEIGHT - 240) player.y = MAP_HEIGHT - 240;
 
-        // Suivi de la caméra
         if (player.x < camera.x + 60) {
             camera.x = player.x - 60;
         } else if (player.x > camera.x + 240) {
@@ -130,7 +164,7 @@ int main(void) {
         draw_visible_tiles(tile_col, tile_row, pixel_offset_x, pixel_offset_y);
         display_player();
 
-        // Dessine le menu de triche par-dessus le jeu s'il est ouvert
+        // Dessiner le menu par-dessus
         draw_cheat_menu();
 
         /*------------------------------------------*/
