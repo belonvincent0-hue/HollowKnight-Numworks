@@ -1,5 +1,4 @@
 #include "libs/eadk.h"
-#include <stdio.h>
 #include <stdbool.h>
 #include "fps.h"
 #include "jpg.h"
@@ -53,28 +52,22 @@ void display_player(){
     eadk_display_push_rect_uniform((eadk_rect_t){screen_x, screen_y, 12, 24}, eadk_color_white);
 }
 
-// Affichage dynamique du menu avec l'état [ON] / [OFF]
+// Affichage du menu de triche
 void draw_cheat_menu() {
     if (!cheat_menu_open) return;
 
     eadk_display_push_rect_uniform((eadk_rect_t){40, 40, 240, 160}, eadk_color_black);
     eadk_display_draw_string("--- SOH CHEAT MENU ---", (eadk_point_t){50, 50}, true, eadk_color_yellow, eadk_color_black);
 
-    char buf_god[32];
-    sprintf(buf_god, "God Mode : %s", god_mode ? "ON" : "OFF");
-    if (cheat_selected_option == 0) {
-        eadk_display_draw_string(buf_god, (eadk_point_t){60, 90}, true, eadk_color_green, eadk_color_black);
-    } else {
-        eadk_display_draw_string(buf_god, (eadk_point_t){60, 90}, true, eadk_color_white, eadk_color_black);
-    }
+    // Option 0 : God Mode
+    const char* god_str = god_mode ? "God Mode : ON " : "God Mode : OFF";
+    eadk_color_t color0 = (cheat_selected_option == 0) ? eadk_color_green : eadk_color_white;
+    eadk_display_draw_string(god_str, (eadk_point_t){60, 90}, true, color0, eadk_color_black);
 
-    char buf_spd[32];
-    sprintf(buf_spd, "Vitesse x2 : %s", (player_speed > 8) ? "ON" : "OFF");
-    if (cheat_selected_option == 1) {
-        eadk_display_draw_string(buf_spd, (eadk_point_t){60, 120}, true, eadk_color_green, eadk_color_black);
-    } else {
-        eadk_display_draw_string(buf_spd, (eadk_point_t){60, 120}, true, eadk_color_white, eadk_color_black);
-    }
+    // Option 1 : Vitesse x2
+    const char* spd_str = (player_speed > 8) ? "Vitesse x2 : ON " : "Vitesse x2 : OFF";
+    eadk_color_t color1 = (cheat_selected_option == 1) ? eadk_color_green : eadk_color_white;
+    eadk_display_draw_string(spd_str, (eadk_point_t){60, 120}, true, color1, eadk_color_black);
 }
 
 int main(void) {
@@ -94,7 +87,7 @@ int main(void) {
         eadk_keyboard_state_t state = eadk_keyboard_scan();
         if (eadk_keyboard_key_down(state, eadk_key_home)) break;
 
-        // Ouvrir/Fermer le menu avec la touche OK (ou EXE)
+        // Ouvrir/Fermer le menu avec OK
         static bool ok_pressed_last = false;
         bool ok_pressed_now = eadk_keyboard_key_down(state, eadk_key_ok);
         if (ok_pressed_now && !ok_pressed_last) {
@@ -103,7 +96,7 @@ int main(void) {
         ok_pressed_last = ok_pressed_now;
 
         if (cheat_menu_open) {
-            // Navigation Haut / Bas dans le menu
+            // Navigation Haut / Bas
             static bool up_last = false, down_last = false, right_last = false;
             
             bool up_now = eadk_keyboard_key_down(state, eadk_key_up);
@@ -130,7 +123,7 @@ int main(void) {
             right_last = right_now;
 
         } else {
-            // Déplacement normal du joueur si le menu est fermé
+            // Déplacement normal
             if (eadk_keyboard_key_down(state, eadk_key_left)) dx -= player_speed;
             if (eadk_keyboard_key_down(state, eadk_key_right)) dx += player_speed;
             if (eadk_keyboard_key_down(state, eadk_key_up)) dy -= player_speed;
