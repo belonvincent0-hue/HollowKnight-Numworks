@@ -1,0 +1,30 @@
+name: Build NumWorks App
+
+on: [push, workflow_dispatch]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup ARM Compiler
+        uses: xpack-dev-tools/arm-none-eabi-gcc-action@v1.14.0
+
+      - name: Setup Node & Nwlink
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install nwlink
+        run: npm install -g nwlink
+
+      - name: Compile
+        run: |
+          make
+
+      - name: Download .nwa
+        uses: actions/upload-artifact@v4
+        with:
+          name: application-nwa
+          path: *.nwa
